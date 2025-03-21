@@ -1,7 +1,5 @@
-const { KnownDevices } = require("puppeteer");
-
 class KnightsTravails {
-    maxBound = [7,7];
+    maxBound = [3,3];
     minBound = [0,0];
     movements = [[1,2],[2,1],[-1,-2],[-2,-1],[-1,2],[1,-2],[-2,1],[2,-1]];
 
@@ -24,12 +22,31 @@ class KnightsTravails {
 
     knightMoves(source, target) {
         const q = [source];
-        const visited = Array.from({length: this.maxBound[1]}, () => this.createNullArray(this.maxBound[0]));
-        while(q.length > 0) {
+        const visited = Array.from({length: this.maxBound[1]+1}, () => this.createNullArray(this.maxBound[0]+1));
+        const adjList = new Map();
 
+        while(q.length > 0) {
+            const currentVertex = q.shift();
+            
+            if(visited[currentVertex[0]][currentVertex[1]]) {
+                continue;
+            } else {
+                visited[currentVertex[0]][currentVertex[1]] = true;
+            }
+
+            const adjVertices = this.possibleVertices(currentVertex);
+            
+            adjList.set(currentVertex, adjVertices);
+
+            // console.log(`Vertex [${currentVertex}]: List [${adjVertices}]`)
+
+            adjVertices.forEach(e => {
+                q.push(e);
+            })
         }
+        console.log(adjList);
     }
 }
 
 const knights = new KnightsTravails();
-console.log(knights.possibleVertices([0,0]));
+console.log(knights.knightMoves([0,0], [1,2]));
