@@ -11,11 +11,17 @@ class KnightsTravails {
     [-2, 1],
     [2, -1],
   ];
+  visited;
 
   createNullArray(size) {
     return Array.from({ length: size }, () => null);
   }
 
+  positionToString(position) {
+    return `[${position[0]},${position[1]}]`;
+  }
+
+  // Get possible moves from current position
   possibleVertices(current) {
     const [x, y] = current;
     const vertices = [];
@@ -26,6 +32,10 @@ class KnightsTravails {
         return;
       if (newVertex[0] < this.minBound[0] || newVertex[1] < this.minBound[1])
         return;
+      //Skip this move if already visited
+      if (this.visited[newVertex[0]][newVertex[1]]) {
+        return;
+      }
       vertices.push(newVertex);
     });
     return vertices;
@@ -54,48 +64,60 @@ class KnightsTravails {
     }
 
     const [targX, targY] = target;
-    const q = [{ vertex: source, prevVertices: null }];
-    const visited = Array.from({ length: this.maxBound[1] + 1 }, () =>
+    const q = [source];
+    //Initialize visited array based on the max and min size declared
+    this.visited = Array.from({ length: this.maxBound[1] + 1 }, () =>
       this.createNullArray(this.maxBound[0] + 1)
     );
+    //For path backtracing. starting position with null as it's previous vertex;
+    const path = {
+      [this.positionToString(source)]: null,
+    };
 
+    //Loop to visit vertices in queue
     while (q.length > 0) {
-      const previousVertex = q[0].prevVertices;
-      const currentVertex = q[0].vertex;
+      const currentVertex = q.shift();
       const [currX, currY] = currentVertex;
 
-      q.shift();
+      //Mark current Vertex as visited
+      this.visited[currY][currX] = true;
 
-      if (visited[currY][currX]) {
-        continue;
-      } else {
-        visited[currY][currX] = true;
-      }
-
+      //check if current vertex is the target
       if (currX === targX && currY == targY) {
-        const pathArray = previousVertex;
-        const moves = pathArray.length;
+        //get previous vertex of target / current vertex from path object
+        let parent = path[this.positionToString(target)];
+        //reversed path Backtracing array
+        const targetPath = [target];
         let pathString = "";
+        let moves = 0;
 
-        for (let i = 0; i < moves; i++) {
-          pathString += `[${pathArray[i]}] => `;
+        //Backtrace from target to previous nodes until null / starting point reached
+        while (parent) {
+          targetPath.push(parent);
+          parent = path[this.positionToString(parent)];
         }
 
-        pathString += `[${currentVertex}]`;
+        //Create path string by looping back from target to starting vertex in the targetPath array
+        for (let i = targetPath.length - 1; i >= 0; i--) {
+          if (targetPath[i] !== target) {
+            pathString += `[${targetPath[i]}] => `;
+            moves++;
+          } else {
+            pathString += `[${targetPath[i]}]`;
+          }
+        }
+
         console.log(`You made it in ${moves} moves! Here's your path:`);
         console.log(pathString);
         return;
       }
 
+      //Get the adjacent vertices of the current vertices
       const adjVertices = this.possibleVertices(currentVertex);
-
+      //Enqueue adjacent vertices and add each adjacent vertices to path object with value / previous vertex set to current vertex
       adjVertices.forEach((e) => {
-        const vertObj = { vertex: e, prevVertices: [] };
-        if (previousVertex) {
-          vertObj.prevVertices.push(...previousVertex);
-        }
-        vertObj.prevVertices.push(currentVertex);
-        q.push(vertObj);
+        q.push(e);
+        path[this.positionToString(e)] = currentVertex;
       });
     }
 
@@ -104,4 +126,4 @@ class KnightsTravails {
 }
 
 const knights = new KnightsTravails();
-knights.knightMoves([7, 7], [0, 0]);
+knights.knightMoves([7, 7], [3, 0]);
